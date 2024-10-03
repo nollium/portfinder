@@ -10,7 +10,9 @@ pip install -r requirements.txt # psutil, rich
 
 ## Usage
 ```
-python3 portfinder.py
+sudo python3 portfinder.py
 ```
+Portfinder can be launched as an unpriviledged user but it will have bad results on priviledged processes
+
 
 It's just a small psutil wrapper which displays the output nicely in a rich table
