@@ -5,7 +5,7 @@ Nicely displays which process is listening on some ports
 
 ## Install
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt # psutil, rich
 ```
 
 ## Usage
