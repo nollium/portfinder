@@ -1,7 +1,7 @@
 # portfinder
 Nicely displays which process is listening on some ports
 
-![image](https://github.com/user-attachments/assets/e41f387a-515b-428c-bb6a-2228cc310674)
+![image](https://github.com/user-attachments/assets/f55c3ab4-4b1d-4056-b25f-1290fb30ceb0)
 
 ## Install
 ```
