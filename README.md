@@ -13,4 +13,4 @@ pip install -r requirements.txt
 python3 portfinder.py
 ```
 
-It's just a small wrapper on psutil that displays the output nicely in a rich table
+It's just a small psutil wrapper which displays the output nicely in a rich table
