@@ -5,6 +5,8 @@ from rich.text import Text
 from datetime import datetime
 from typing import List
 import sys
+import signal
+import argparse
 
 
 def list_bound_ports(filter_ports: List[int] = None) -> List[dict]:
@@ -43,7 +45,15 @@ def format_cmdline(cmdline: List[str]) -> Text:
     return text
 
 
-def display_ports(ports: List[dict]) -> None:
+def kill_process(pid: int) -> bool:
+    try:
+        psutil.Process(pid).kill()  # This sends SIGKILL
+        return True
+    except (psutil.NoSuchProcess, psutil.AccessDenied, PermissionError):
+        return False
+
+
+def display_ports(ports: List[dict], kill: bool = False) -> None:
     console = Console()
 
     if not ports:
@@ -58,7 +68,11 @@ def display_ports(ports: List[dict]) -> None:
     table.add_column("Cmdline", style="yellow", overflow="fold")
     table.add_column("Creation Date", style="blue")
 
+    killed_processes = []
     for port in ports:
+        if kill:
+            if kill_process(int(port['pid'])):
+                killed_processes.append(f"Port {port['port']} (PID: {port['pid']})")
         table.add_row(
             port['interface'],
             str(port['port']),
@@ -68,18 +82,19 @@ def display_ports(ports: List[dict]) -> None:
         )
 
     console.print(table)
+    if killed_processes:
+        console.print("\n[bold red]Killed processes:[/bold red]")
+        for proc in killed_processes:
+            console.print(f"[red]- {proc}[/red]")
 
 
 if __name__ == "__main__":
-    # Parse command-line arguments for ports
-    if len(sys.argv) > 1:
-        try:
-            filter_ports = [int(port) for port in sys.argv[1:]]
-        except ValueError:
-            print("Please provide valid port numbers.")
-            sys.exit(1)
-    else:
-        filter_ports = None
-
+    parser = argparse.ArgumentParser(description='List and optionally kill processes binding to specific ports')
+    parser.add_argument('ports', nargs='*', type=int, help='Optional list of ports to filter')
+    parser.add_argument('--kill', action='store_true', help='Kill matched processes with SIGKILL')
+    
+    args = parser.parse_args()
+    filter_ports = args.ports if args.ports else None
+    
     bound_ports = list_bound_ports(filter_ports)
-    display_ports(bound_ports)
+    display_ports(bound_ports, args.kill)
