@@ -20,6 +20,12 @@ You can install portfinder directly from GitHub:
 pip install git+https://github.com/nollium/portfinder.git
 ```
 
+**or with pipx:**
+
+```bash
+pip install git+https://github.com/nollium/portfinder.git
+```
+
 ## Usage
 
 List all bound ports:
