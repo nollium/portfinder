@@ -3,13 +3,13 @@ from rich.table import Table
 from rich.console import Console
 from rich.text import Text
 from datetime import datetime
-from typing import List
+from typing import List, Optional, Dict, Any
 import sys
 import signal
 import argparse
 
 
-def list_bound_ports(filter_ports: List[int] = None) -> List[dict]:
+def list_bound_ports(filter_ports: Optional[List[int]] = None) -> List[Dict[str, Any]]:
     bound_ports = []
 
     for conn in psutil.net_connections(kind='inet'):
@@ -88,7 +88,7 @@ def display_ports(ports: List[dict], kill: bool = False) -> None:
             console.print(f"[red]- {proc}[/red]")
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(description='List and optionally kill processes binding to specific ports')
     parser.add_argument('ports', nargs='*', type=int, help='Optional list of ports to filter')
     parser.add_argument('--kill', action='store_true', help='Kill matched processes with SIGKILL')
@@ -98,3 +98,7 @@ if __name__ == "__main__":
     
     bound_ports = list_bound_ports(filter_ports)
     display_ports(bound_ports, args.kill)
+
+
+if __name__ == "__main__":
+    main()

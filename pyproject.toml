@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "portfinder"
+version = "0.1.0"
+authors = [
+  { name="nollium" },
+]
+description = "A tool to find and manage processes binding to ports"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "psutil",
+    "rich",
+]
+
+[project.scripts]
+portfinder = "portfinder.portfinder:main" 

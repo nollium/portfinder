@@ -1,37 +1,39 @@
-# portfinder
-Nicely displays which process is listening on some ports
+# Portfinder
 
-![image](https://github.com/user-attachments/assets/f55c3ab4-4b1d-4056-b25f-1290fb30ceb0)
+A command-line tool to find and manage processes binding to ports on your system.
 
-## Install
-```
-pip install -r requirements.txt # psutil, rich
+## Features
+
+- List all processes binding to ports
+- Filter by specific ports
+- Option to kill processes binding to specific ports
+- Colorful and readable output
+
+## Installation
+
+You can install portfinder directly from GitHub:
+
+```bash
+pip install git+https://github.com/nollium/portfinder.git
 ```
 
 ## Usage
+
+List all bound ports:
+```bash
+portfinder
 ```
-sudo python3 portfinder.py [PORTS] [--kill]
+
+List specific ports:
+```bash
+portfinder 80 443 8080
 ```
 
-- **PORTS**: Optional list of ports to filter. Only processes listening on these ports will be displayed.
-- **--kill**: Optional flag to terminate matched processes with SIGKILL.
+Kill processes binding to specific ports:
+```bash
+portfinder 80 443 --kill
+```
 
-### Examples
-- Display all listening processes:
-  ```
-  sudo python3 portfinder.py
-  ```
+## License
 
-- Display processes listening on ports 22, 80, and 8080:
-  ```
-  sudo python3 portfinder.py 22 80 8080
-  ```
-
-- Display and kill processes listening on ports 22, 80, and 8080:
-  ```
-  sudo python3 portfinder.py 22 80 8080 --kill
-  ```
-
-Portfinder can be launched as an unprivileged user, but it will have limited results on privileged processes.
-
-It's just a small psutil wrapper which displays the output nicely in a rich table.
+MIT License
