@@ -2,6 +2,9 @@
 
 A command-line tool to find and manage processes binding to ports on your system.
 
+![Portfinder output](https://github.com/user-attachments/assets/f55c3ab4-4b1d-4056-b25f-1290fb30ceb0)
+
+
 ## Features
 
 - List all processes binding to ports
