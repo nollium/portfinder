@@ -23,7 +23,7 @@ pip install git+https://github.com/nollium/portfinder.git
 **or with pipx:**
 
 ```bash
-pip install git+https://github.com/nollium/portfinder.git
+pipx install git+https://github.com/nollium/portfinder.git
 ```
 
 ## Usage
