@@ -12,27 +12,38 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
             artifact_name: portfinder-linux
             binary_name: portfinder
+            container: quay.io/pypa/manylinux2014_x86_64
           - os: windows-latest
             artifact_name: portfinder-windows
             binary_name: portfinder.exe
+            container: null
           - os: macos-latest
             artifact_name: portfinder-macos
             binary_name: portfinder
+            container: null
 
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python (non-container)
+      if: matrix.container == null
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+
+    - name: Set up Python (manylinux)
+      if: matrix.container != null
+      run: |
+        /opt/python/cp311-cp311/bin/python -m pip install --upgrade pip
+        ln -s /opt/python/cp311-cp311/bin/python /usr/local/bin/python
+        ln -s /opt/python/cp311-cp311/bin/pip /usr/local/bin/pip
 
     - name: Install dependencies
       run: |
@@ -60,8 +71,40 @@ jobs:
         name: ${{ matrix.artifact_name }}
         path: dist/${{ matrix.binary_name }}
 
+  build-static:
+    runs-on: ubuntu-latest
+    container: python:3.11-alpine
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install build dependencies
+      run: |
+        apk add --no-cache gcc musl-dev linux-headers libffi-dev openssl-dev zlib-dev bzip2-dev xz-dev git binutils
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-build.txt
+        pip install -e .
+    
+    - name: Build static binary
+      run: |
+        pyinstaller --onefile --clean --distpath=dist --name portfinder src/portfinder/portfinder.py
+        cd dist && strip portfinder
+    
+    - name: Test binary
+      run: |
+        ./dist/portfinder --help
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: portfinder-linux-static
+        path: dist/portfinder
+
   update-latest-release:
-    needs: build
+    needs: [build, build-static]
     runs-on: ubuntu-latest
     
     steps:
@@ -94,13 +137,17 @@ jobs:
           
           This release is automatically updated with the latest binaries from the main branch.
           
-          **⚠️ Note**: These are development builds and may be unstable.
-          
           ## Downloads
           
-          - **Linux**: `portfinder-linux`
+          - **Linux**: `portfinder-linux` (manylinux2014, works on most distributions)
+          - **Linux (static)**: `portfinder-linux-static` (fully static, works on any Linux)
           - **Windows**: `portfinder-windows.exe`
           - **macOS**: `portfinder-macos`
+          
+          ### Linux Compatibility
+          
+          - Use `portfinder-linux` for most modern Linux distributions (glibc 2.17+)
+          - Use `portfinder-linux-static` if you encounter GLIBC errors or need maximum compatibility
           
           ### Installation
           
@@ -130,11 +177,12 @@ jobs:
           Built from commit: ${{ github.sha }}
           Build date: ${{ steps.date.outputs.date }}
         artifacts: |
-          artifacts/portfinder-linux/portfinder
-          artifacts/portfinder-windows/portfinder.exe
-          artifacts/portfinder-macos/portfinder
+          artifacts/portfinder-linux/portfinder#portfinder-linux
+          artifacts/portfinder-linux-static/portfinder#portfinder-linux-static  
+          artifacts/portfinder-windows/portfinder.exe#portfinder-windows.exe
+          artifacts/portfinder-macos/portfinder#portfinder-macos
         artifactContentType: application/octet-stream
         allowUpdates: true
         makeLatest: false
-        prerelease: true
+        prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
