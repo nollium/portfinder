@@ -1,0 +1,155 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: portfinder-linux
+            binary_name: portfinder
+          - os: windows-latest
+            artifact_name: portfinder-windows
+            binary_name: portfinder.exe
+          - os: macos-latest
+            artifact_name: portfinder-macos
+            binary_name: portfinder
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-build.txt
+        pip install -e .
+
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller --clean --distpath=dist portfinder.spec
+
+    - name: List dist contents
+      run: |
+        ls -la dist/
+      shell: bash
+
+    - name: Test binary
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          ./dist/portfinder.exe --help
+        else
+          chmod +x ./dist/portfinder
+          ./dist/portfinder --help
+        fi
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/${{ matrix.binary_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts/
+
+    - name: List artifacts
+      run: |
+        ls -la artifacts/
+        find artifacts/ -type f -ls
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          Release ${{ github.ref_name }}
+          
+          ## Downloads
+          
+          - **Linux**: `portfinder-linux`
+          - **Windows**: `portfinder-windows.exe`
+          - **macOS**: `portfinder-macos`
+          
+          ### Installation
+          
+          #### Linux/macOS:
+          ```bash
+          chmod +x portfinder-*
+          sudo mv portfinder-* /usr/local/bin/portfinder
+          ```
+          
+          #### Windows:
+          Move `portfinder-windows.exe` to a directory in your PATH or run it directly.
+          
+          ### Usage
+          
+          ```bash
+          # List all processes binding to ports
+          portfinder
+          
+          # Filter specific ports
+          portfinder 8080 3000
+          
+          # Kill processes on specific ports
+          portfinder --kill 8080
+          ```
+        draft: false
+        prerelease: false
+
+    - name: Upload Linux Binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/portfinder-linux/portfinder
+        asset_name: portfinder-linux
+        asset_content_type: application/octet-stream
+
+    - name: Upload Windows Binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/portfinder-windows/portfinder.exe
+        asset_name: portfinder-windows.exe
+        asset_content_type: application/octet-stream
+
+    - name: Upload macOS Binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/portfinder-macos/portfinder
+        asset_name: portfinder-macos
+        asset_content_type: application/octet-stream

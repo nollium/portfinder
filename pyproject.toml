@@ -22,4 +22,10 @@ dependencies = [
 ]
 
 [project.scripts]
-portfinder = "portfinder.portfinder:main" 
+portfinder = "portfinder.portfinder:main"
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/portfinder"] 
