@@ -13,37 +13,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04  # Use older Ubuntu for better compatibility
             artifact_name: portfinder-linux
             binary_name: portfinder
-            container: quay.io/pypa/manylinux2014_x86_64
           - os: windows-latest
             artifact_name: portfinder-windows
             binary_name: portfinder.exe
-            container: null
           - os: macos-latest
             artifact_name: portfinder-macos
             binary_name: portfinder
-            container: null
 
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python (non-container)
-      if: matrix.container == null
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-
-    - name: Set up Python (manylinux)
-      if: matrix.container != null
-      run: |
-        /opt/python/cp311-cp311/bin/python -m pip install --upgrade pip
-        ln -s /opt/python/cp311-cp311/bin/python /usr/local/bin/python
-        ln -s /opt/python/cp311-cp311/bin/pip /usr/local/bin/pip
 
     - name: Install dependencies
       run: |
@@ -73,31 +61,15 @@ jobs:
 
   build-static:
     runs-on: ubuntu-latest
-    container: python:3.11-alpine
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install build dependencies
+    - name: Build static binary in Alpine container
       run: |
-        apk add --no-cache gcc musl-dev linux-headers libffi-dev openssl-dev zlib-dev bzip2-dev xz-dev git binutils
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace python:3.11-alpine sh build-static.sh
     
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-build.txt
-        pip install -e .
-    
-    - name: Build static binary
-      run: |
-        pyinstaller --onefile --clean --distpath=dist --name portfinder src/portfinder/portfinder.py
-        cd dist && strip portfinder
-    
-    - name: Test binary
-      run: |
-        ./dist/portfinder --help
-        
-    - name: Upload artifact
+    - name: Upload static artifact
       uses: actions/upload-artifact@v4
       with:
         name: portfinder-linux-static
