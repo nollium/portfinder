@@ -148,13 +148,11 @@ jobs:
           ---
           Built from commit: ${{ github.sha }}
           Build date: ${{ steps.date.outputs.date }}
-        artifacts: |
-          artifacts/portfinder-linux/portfinder#portfinder-linux
-          artifacts/portfinder-linux-static/portfinder#portfinder-linux-static  
-          artifacts/portfinder-windows/portfinder.exe#portfinder-windows.exe
-          artifacts/portfinder-macos/portfinder#portfinder-macos
-        artifactContentType: application/octet-stream
-        allowUpdates: true
-        makeLatest: false
+        files: |
+          artifacts/portfinder-linux/portfinder
+          artifacts/portfinder-linux-static/portfinder
+          artifacts/portfinder-windows/portfinder.exe
+          artifacts/portfinder-macos/portfinder
+        draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
