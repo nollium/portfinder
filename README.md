@@ -17,7 +17,7 @@ A command-line tool to find and manage processes binding to ports on your system
 ### Download Pre-built Binaries
 
 Download the latest binaries from the [releases page](https://github.com/nollium/portfinder/releases/latest):
-- **Linux**: `portfinder-linux` (built with manylinux2014, compatible with most distributions)
+- **Linux**: `portfinder-linux` (built on Ubuntu 20.04, requires glibc 2.31+)
 - **Linux (static)**: `portfinder-linux-static` (fully static, works on any Linux)
 - **Windows**: `portfinder-windows.exe`
 - **macOS**: `portfinder-macos`
@@ -25,7 +25,7 @@ Download the latest binaries from the [releases page](https://github.com/nollium
 #### Linux Binary Compatibility
 
 We provide two Linux binaries:
-1. **portfinder-linux**: Built using manylinux2014, compatible with glibc 2.17+ (CentOS 7+, Ubuntu 14.04+, Debian 8+)
+1. **portfinder-linux**: Built on Ubuntu 20.04, requires glibc 2.31+ (Ubuntu 20.04+, Debian 11+, CentOS 8+)
 2. **portfinder-linux-static**: Fully static binary built with musl libc, works on any Linux distribution
 
 If you encounter errors like `GLIBC_2.XX not found`, use the static version.
