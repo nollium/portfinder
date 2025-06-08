@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04  # Use older Ubuntu for better compatibility
+          - os: ubuntu-22.04  # Use newer Ubuntu (22.04)
             artifact_name: portfinder-linux
             binary_name: portfinder
           - os: windows-latest
