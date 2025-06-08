@@ -30,23 +30,28 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --clean --distpath dist/ portfinder.spec
+        pyinstaller --clean --distpath=dist portfinder.spec
+
+    - name: List dist contents
+      run: |
+        ls -la dist/
+      shell: bash
 
     - name: Test binary
       run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
-          dist/portfinder.exe --help
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          ./dist/portfinder.exe --help
         else
-          chmod +x dist/portfinder
-          dist/portfinder --help
+          chmod +x ./dist/portfinder
+          ./dist/portfinder --help
         fi
       shell: bash
 
     - name: Check binary size
       run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
-          ls -la dist/portfinder.exe
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          ls -lh dist/portfinder.exe
         else
-          ls -la dist/portfinder
+          ls -lh dist/portfinder
         fi
       shell: bash
