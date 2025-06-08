@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  
 jobs:
   build:
     strategy:
@@ -69,29 +72,23 @@ jobs:
       with:
         path: artifacts/
 
+    - name: Get current date
+      id: date
+      run: echo "date=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_OUTPUT
+
     - name: Delete existing latest release
-      uses: dev-drprasad/delete-tag-and-release@v1.0
+      uses: dev-drprasad/delete-tag-and-release@v1.1
       with:
         tag_name: latest
         github_token: ${{ secrets.GITHUB_TOKEN }}
         delete_release: true
       continue-on-error: true
 
-    - name: Create latest tag
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git tag -fa latest -m "Latest build from main branch"
-        git push origin latest --force
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create or Update Latest Release
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: latest
-        release_name: Latest Build
+        tag: latest
+        name: Latest Build
         body: |
           # Latest Build from Main Branch
           
@@ -131,36 +128,13 @@ jobs:
           
           ---
           Built from commit: ${{ github.sha }}
-          Build date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        draft: false
+          Build date: ${{ steps.date.outputs.date }}
+        artifacts: |
+          artifacts/portfinder-linux/portfinder
+          artifacts/portfinder-windows/portfinder.exe
+          artifacts/portfinder-macos/portfinder
+        artifactContentType: application/octet-stream
+        allowUpdates: true
+        makeLatest: false
         prerelease: true
-
-    - name: Upload Linux Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/portfinder-linux/portfinder
-        asset_name: portfinder-linux
-        asset_content_type: application/octet-stream
-
-    - name: Upload Windows Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/portfinder-windows/portfinder.exe
-        asset_name: portfinder-windows.exe
-        asset_content_type: application/octet-stream
-
-    - name: Upload macOS Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/portfinder-macos/portfinder
-        asset_name: portfinder-macos
-        asset_content_type: application/octet-stream
+        token: ${{ secrets.GITHUB_TOKEN }}
